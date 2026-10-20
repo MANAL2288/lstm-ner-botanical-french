@@ -198,6 +198,8 @@ def main():
     summary = load_summary()
     tables, seen = {}, set()
     for study, overrides in STUDIES.items():
+        if study == "baseline":  # its row already heads every study table
+            continue
         rows = []
         for o in overrides:
             r = config_stats(summary, args.task, args.cell, o)

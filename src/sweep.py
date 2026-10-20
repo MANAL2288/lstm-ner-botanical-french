@@ -5,6 +5,7 @@ Usage:
     python src/sweep.py --study optimizer lr          # some studies
     python src/sweep.py --study all --seeds 1 2 3     # everything
     python src/sweep.py --group 2 --list              # print the plan
+    python src/sweep.py --cell cifg --study baseline  # a new cell under the common protocol (3 runs)
 
 Every run trains for at most 60 epochs and stops after 10 epochs without validation-F1
 improvement; the best validation epoch is kept. Runs are named deterministically from their
@@ -22,6 +23,7 @@ BASELINE = dict(cell="vanilla", emb_dim=100, case_dim=8, hidden_size=128, num_la
                 dropout=0.3, init="default", forget_bias=0.0, optimizer="adam", lr=1e-3, batch_size=32)
 
 STUDIES: dict[str, list[dict]] = {
+    "baseline": [dict()],  # the comparison run of every cell: common settings x seeds 1, 2, 3
     "optimizer": [dict(optimizer="adam", lr=1e-3), dict(optimizer="adamw", lr=1e-3),
                   dict(optimizer="rmsprop", lr=1e-3), dict(optimizer="sgd", lr=0.1)],
     "lr": [dict(lr=lr) for lr in (1e-2, 3e-3, 1e-3, 3e-4)],
