@@ -1,0 +1,7 @@
+# Colab already ships torch. On an Intel Mac use: torch==2.2.2 and numpy<2 (Python 3.11).
+torch>=2.2
+numpy
+matplotlib
+pytest
+seqeval      # optional: only to cross-check src/metrics.py in the tests
+tensorboard  # optional, for --tensorboard

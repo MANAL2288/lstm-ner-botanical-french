@@ -1,0 +1,233 @@
+{
+  "species": {
+    "train": {
+      "documents": 1746,
+      "segments": 1769,
+      "tokens": 62010,
+      "pct_O": 92.91,
+      "entities": 1829,
+      "entities_per_type": {
+        "ESPECE": 1829
+      },
+      "entity_length": {
+        "1": 0,
+        "2": 1125,
+        "3": 684,
+        "4": 4,
+        "5": 16,
+        "6": 0
+      },
+      "seg_len_mean": 35.1,
+      "seg_len_max": 128
+    },
+    "val": {
+      "documents": 194,
+      "segments": 198,
+      "tokens": 6542,
+      "pct_O": 92.49,
+      "entities": 203,
+      "entities_per_type": {
+        "ESPECE": 203
+      },
+      "entity_length": {
+        "1": 0,
+        "2": 119,
+        "3": 83,
+        "4": 1,
+        "5": 0,
+        "6": 0
+      },
+      "seg_len_mean": 33.0,
+      "seg_len_max": 128,
+      "oov_token_pct": 6.21,
+      "oov_entity_token_pct": 26.07
+    },
+    "test": {
+      "documents": 485,
+      "segments": 490,
+      "tokens": 16066,
+      "pct_O": 92.48,
+      "entities": 499,
+      "entities_per_type": {
+        "ESPECE": 499
+      },
+      "entity_length": {
+        "1": 0,
+        "2": 303,
+        "3": 187,
+        "4": 4,
+        "5": 5,
+        "6": 0
+      },
+      "seg_len_mean": 32.8,
+      "seg_len_max": 124,
+      "oov_token_pct": 6.91,
+      "oov_entity_token_pct": 27.57
+    },
+    "vocab_train": 6215
+  },
+  "coarse": {
+    "train": {
+      "documents": 603,
+      "segments": 1709,
+      "tokens": 168006,
+      "pct_O": 79.85,
+      "entities": 29160,
+      "entities_per_type": {
+        "ORGANE": 15999,
+        "DESCRIPTEUR": 13161
+      },
+      "entity_length": {
+        "1": 27710,
+        "2": 0,
+        "3": 723,
+        "4": 312,
+        "5": 13,
+        "6": 402
+      },
+      "seg_len_mean": 98.3,
+      "seg_len_max": 128
+    },
+    "val": {
+      "documents": 67,
+      "segments": 188,
+      "tokens": 18096,
+      "pct_O": 79.16,
+      "entities": 3193,
+      "entities_per_type": {
+        "ORGANE": 1716,
+        "DESCRIPTEUR": 1477
+      },
+      "entity_length": {
+        "1": 3014,
+        "2": 0,
+        "3": 84,
+        "4": 45,
+        "5": 5,
+        "6": 45
+      },
+      "seg_len_mean": 96.3,
+      "seg_len_max": 128,
+      "oov_token_pct": 1.64,
+      "oov_entity_token_pct": 1.48
+    },
+    "test": {
+      "documents": 168,
+      "segments": 479,
+      "tokens": 47743,
+      "pct_O": 79.49,
+      "entities": 8279,
+      "entities_per_type": {
+        "ORGANE": 4500,
+        "DESCRIPTEUR": 3779
+      },
+      "entity_length": {
+        "1": 7814,
+        "2": 0,
+        "3": 238,
+        "4": 95,
+        "5": 6,
+        "6": 126
+      },
+      "seg_len_mean": 99.7,
+      "seg_len_max": 128,
+      "oov_token_pct": 1.54,
+      "oov_entity_token_pct": 1.32
+    },
+    "vocab_train": 5465
+  },
+  "fine": {
+    "train": {
+      "documents": 603,
+      "segments": 1711,
+      "tokens": 167933,
+      "pct_O": 79.88,
+      "entities": 28988,
+      "entities_per_type": {
+        "ORGANE": 15946,
+        "DESCRIPTEUR": 5594,
+        "FORME": 2598,
+        "SURFACE": 1607,
+        "COULEUR": 749,
+        "MESURE": 726,
+        "POSITION": 622,
+        "STRUCTURE": 613,
+        "DISPOSITION": 504,
+        "DEVELOPPEMENT": 29
+      },
+      "entity_length": {
+        "1": 27503,
+        "2": 0,
+        "3": 736,
+        "4": 331,
+        "5": 15,
+        "6": 403
+      },
+      "seg_len_mean": 98.1,
+      "seg_len_max": 128
+    },
+    "val": {
+      "documents": 67,
+      "segments": 196,
+      "tokens": 19898,
+      "pct_O": 79.71,
+      "entities": 3514,
+      "entities_per_type": {
+        "ORGANE": 1859,
+        "DESCRIPTEUR": 716,
+        "FORME": 341,
+        "SURFACE": 223,
+        "POSITION": 96,
+        "COULEUR": 77,
+        "MESURE": 73,
+        "STRUCTURE": 67,
+        "DISPOSITION": 57,
+        "DEVELOPPEMENT": 5
+      },
+      "entity_length": {
+        "1": 3342,
+        "2": 0,
+        "3": 95,
+        "4": 34,
+        "5": 4,
+        "6": 39
+      },
+      "seg_len_mean": 101.5,
+      "seg_len_max": 128,
+      "oov_token_pct": 1.56,
+      "oov_entity_token_pct": 1.19
+    },
+    "test": {
+      "documents": 168,
+      "segments": 469,
+      "tokens": 46014,
+      "pct_O": 79.15,
+      "entities": 8130,
+      "entities_per_type": {
+        "ORGANE": 4410,
+        "DESCRIPTEUR": 1626,
+        "FORME": 710,
+        "SURFACE": 466,
+        "COULEUR": 229,
+        "MESURE": 213,
+        "POSITION": 179,
+        "STRUCTURE": 149,
+        "DISPOSITION": 144,
+        "DEVELOPPEMENT": 4
+      },
+      "entity_length": {
+        "1": 7693,
+        "2": 0,
+        "3": 214,
+        "4": 87,
+        "5": 5,
+        "6": 131
+      },
+      "seg_len_mean": 98.1,
+      "seg_len_max": 128,
+      "oov_token_pct": 1.49,
+      "oov_entity_token_pct": 1.3
+    },
+    "vocab_train": 5522
+  }
+}

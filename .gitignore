@@ -218,3 +218,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- FloraNER project ---
+.DS_Store
+# data is downloaded and rebuilt by `python src/download_data.py`
+data/raw/
+data/processed/
+# heavy / local artefacts
+results/runs/*/model.pt
+results/tensorboard/
+results/logs/
