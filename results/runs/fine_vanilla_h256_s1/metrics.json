@@ -1,0 +1,154 @@
+{
+  "best_epoch": 38,
+  "epochs_run": 48,
+  "params": {
+    "total": 1309731,
+    "recurrent": 747520,
+    "embeddings": 552464,
+    "classifier": 9747
+  },
+  "mean_epoch_time_s": 11.841070600562452,
+  "device": "cuda",
+  "val": {
+    "loss": 0.08531788200685182,
+    "precision": 0.937552506300756,
+    "recall": 0.9527603870233352,
+    "f1": 0.9450952717007762,
+    "macro_f1": 0.930404118595743,
+    "token_accuracy": 0.979696451904714,
+    "per_type": {
+      "COULEUR": {
+        "precision": 0.8022,
+        "recall": 0.9481,
+        "f1-score": 0.869,
+        "support": 77.0
+      },
+      "DESCRIPTEUR": {
+        "precision": 0.936,
+        "recall": 0.898,
+        "f1-score": 0.9166,
+        "support": 716.0
+      },
+      "DEVELOPPEMENT": {
+        "precision": 1.0,
+        "recall": 0.8,
+        "f1-score": 0.8889,
+        "support": 5.0
+      },
+      "DISPOSITION": {
+        "precision": 1.0,
+        "recall": 0.9474,
+        "f1-score": 0.973,
+        "support": 57.0
+      },
+      "FORME": {
+        "precision": 0.8952,
+        "recall": 0.9267,
+        "f1-score": 0.9107,
+        "support": 341.0
+      },
+      "MESURE": {
+        "precision": 0.96,
+        "recall": 0.9863,
+        "f1-score": 0.973,
+        "support": 73.0
+      },
+      "ORGANE": {
+        "precision": 0.9687,
+        "recall": 0.9812,
+        "f1-score": 0.9749,
+        "support": 1859.0
+      },
+      "POSITION": {
+        "precision": 0.9694,
+        "recall": 0.9896,
+        "f1-score": 0.9794,
+        "support": 96.0
+      },
+      "STRUCTURE": {
+        "precision": 0.971,
+        "recall": 1.0,
+        "f1-score": 0.9853,
+        "support": 67.0
+      },
+      "SURFACE": {
+        "precision": 0.7782,
+        "recall": 0.8969,
+        "f1-score": 0.8333,
+        "support": 223.0
+      }
+    },
+    "tokens_per_sec": 59972.30164563642
+  },
+  "test": {
+    "loss": 0.09186827226001083,
+    "precision": 0.9345353339787028,
+    "recall": 0.9499384993849939,
+    "f1": 0.9421739660851532,
+    "macro_f1": 0.8988109928895106,
+    "token_accuracy": 0.9783109488416569,
+    "per_type": {
+      "COULEUR": {
+        "precision": 0.8866,
+        "recall": 0.9214,
+        "f1-score": 0.9036,
+        "support": 229.0
+      },
+      "DESCRIPTEUR": {
+        "precision": 0.9319,
+        "recall": 0.8924,
+        "f1-score": 0.9117,
+        "support": 1626.0
+      },
+      "DEVELOPPEMENT": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1-score": 0.6667,
+        "support": 4.0
+      },
+      "DISPOSITION": {
+        "precision": 0.963,
+        "recall": 0.9028,
+        "f1-score": 0.9319,
+        "support": 144.0
+      },
+      "FORME": {
+        "precision": 0.8951,
+        "recall": 0.9493,
+        "f1-score": 0.9214,
+        "support": 710.0
+      },
+      "MESURE": {
+        "precision": 0.9295,
+        "recall": 0.9906,
+        "f1-score": 0.9591,
+        "support": 213.0
+      },
+      "ORGANE": {
+        "precision": 0.9616,
+        "recall": 0.9812,
+        "f1-score": 0.9713,
+        "support": 4410.0
+      },
+      "POSITION": {
+        "precision": 0.9888,
+        "recall": 0.9888,
+        "f1-score": 0.9888,
+        "support": 179.0
+      },
+      "STRUCTURE": {
+        "precision": 0.9195,
+        "recall": 0.9195,
+        "f1-score": 0.9195,
+        "support": 149.0
+      },
+      "SURFACE": {
+        "precision": 0.7691,
+        "recall": 0.8648,
+        "f1-score": 0.8141,
+        "support": 466.0
+      }
+    },
+    "tokens_per_sec": 69241.06326270833
+  }
+}

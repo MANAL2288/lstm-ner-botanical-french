@@ -78,6 +78,34 @@ python src/sweep.py --cell cifg --study hidden_size
 
 Everything else (data, training, evaluation, logging, parameter counts) is shared.
 
+## Results — vanilla LSTM, fine-grained task (10 entity types)
+
+56 runs on a Colab T4 (all with the protocol above). Full tables: `results/analysis/tables.md`.
+
+| Model | Test F1 (%) | Test macro F1 (%) | Params (recurrent) | s/epoch (T4) | Best epoch |
+|---|---|---|---|---|---|
+| Baseline (Adam, lr 1e-3, batch 32, BiLSTM 128) | 94.01 ± 1.10 | 90.73 ± 0.28 | 800,035 (242,688) | 12.0 | 58 |
+| **Best on validation: lr = 0.01** | **94.35 ± 0.69** | **92.31 ± 0.40** | 800,035 (242,688) | 11.9 | 22 |
+| spaCy, dataset authors (reference) | 94.5 | — | — | — | — |
+
+Main findings (Δ = test F1 difference with the baseline trained with the same seed, `results/analysis/effects.png`):
+
+* **Seed effect.** Seed 3 is ~2 points below seeds 1–2 for almost every configuration (for the baseline, mostly
+  false positives on FORME: precision −16 points). Configurations are therefore compared **paired by seed**, which
+  removes this shared noise.
+* **Bidirectionality is by far the most important choice:** a forward-only LSTM loses **4.1 points** (Δ −4.12 ± 0.25).
+* **Optimisation speed matters:** lr = 0.01 converges ~3× faster (best epoch 22 vs 58) and is the only setting that
+  improves the baseline (Δ +0.35); SGD (Δ −2.70), lr = 3e-4 (Δ −2.10) and batch 128 (Δ −1.07) have not converged
+  within 60 epochs (best epoch ≈ 60).
+* **Regularisation is needed:** without dropout the model overfits early (best epoch ≈ 29, Δ −1.64).
+* **No measurable effect** (|Δ| ≤ 0.35, within seed noise): Adam / AdamW / RMSprop, weight initialisation
+  (default, Xavier, orthogonal, forget-gate bias), batch 16 vs 32, 2 layers (2.6× recurrent parameters, 1.9× slower).
+* Capacity: hidden size 64 or 256 is slightly worse than 128 (Δ −0.44 / −0.53); 256 overfits earlier.
+* Per type: ORGANE, POSITION, MESURE > 95 %; SURFACE (~82 %) and FORME/DESCRIPTEUR confusions are the main errors.
+  Macro F1 is fragile: DEVELOPPEMENT has only 4 test entities.
+
+Not run (Colab GPU quota): dropout 0.5 seed 3, and the case-feature ablation.
+
 ## Reference
 
 Nainia et al., *FloraNER: a Named Entity Recognition Dataset for Botanical French Text* (2024).
