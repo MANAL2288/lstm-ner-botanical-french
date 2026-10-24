@@ -27,7 +27,7 @@ def run(*args):
         raise subprocess.CalledProcessError(process.returncode, command)
 run('-m', 'pip', 'install', '-q', 'pytest', 'numpy')
 ''')]
-for rel in ['src/data.py','src/download_data.py','src/metrics.py','src/cells.py','src/model.py','src/train.py','src/sweep.py','tests/test_model.py','tests/test_wmc.py','src/summarize_wmc.py']:
+for rel in ['src/data.py','src/download_data.py','src/metrics.py','src/cells.py','src/model.py','src/train.py','src/sweep.py','tests/test_model.py','tests/test_wmc.py','tests/test_wmc_summary.py','src/summarize_wmc.py']:
     cells.append(code('%%writefile '+rel+'\n'+(ROOT/rel).read_text(encoding='utf-8-sig')))
 cells += [md('## Verify and prepare the common data'), code("run('-m', 'pytest', 'tests', '-q')\nrun('src/download_data.py')"), md('## Three full WMC runs\nCompleted runs are skipped on rerun. An interrupted run restarts from its seed; partial epochs are not checkpointed.'), code("run('-u', 'src/sweep.py', '--cell', 'wmc', '--study', 'baseline', '--seeds', '1', '2', '3', '--epochs', '60', '--patience', '10')"), md('## WMC results and handoff archive'), code("""run('src/summarize_wmc.py')
 import shutil
