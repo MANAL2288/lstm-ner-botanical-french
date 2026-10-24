@@ -28,7 +28,7 @@ hyperparameters chosen on validation F1, reported as mean ± std over 3 seeds.
 | Path | Content |
 |---|---|
 | `src/data.py` | CSV loading, tokenisation, char spans → BIO, document-level val split, vocab, `Dataset`, `collate_fn` |
-| `src/cells.py` | `RecurrentCell` interface + `VanillaLSTMCell` (eqs. 1–6 of the guidelines) |
+| `src/cells.py` | `RecurrentCell` interface + `VanillaLSTMCell` (eqs. 1–6) and `WMCCell` (eqs. 7–12) |
 | `src/model.py` | `RecurrentLayer` (masked, optionally bidirectional unrolling) and `NERTagger` |
 | `src/metrics.py` | entity-level precision / recall / F1 (conlleval semantics) |
 | `src/train.py` | training loop (≤ 60 epochs, early stopping, best validation epoch kept), evaluation, run logging |
@@ -105,6 +105,55 @@ Main findings (Δ = test F1 difference with the baseline trained with the same s
   Macro F1 is fragile: DEVELOPPEMENT has only 4 test entities.
 
 Not run (Colab GPU quota): dropout 0.5 seed 3, and the case-feature ablation.
+
+## WMC contribution — Said & MS
+
+WMC is implemented in `src/cells.py` and registered as `wmc`. The input/forget gates use the previous memory, and the output gate uses the **updated** memory (guidelines equation 9). All transformations use `nn.Linear`; the three memory maps are full bias-free matrices followed by `tanh`.
+
+### Architecture and implementation
+
+The common word embedding (100) and casing embedding (8) feed a single bidirectional WMC layer with hidden size 128 per direction. Dropout and the shared linear classifier produce BIO tag logits. Tokenisation, splits, padding masks, loss and entity-level evaluation are inherited from the common pipeline.
+
+WMC adds three learned, full H × H memory projections to the Vanilla cell:
+
+```text
+i_t = sigmoid(W_xi x_t + W_hi h_(t-1) + b_i + tanh(W_ci c_(t-1)))
+f_t = sigmoid(W_xf x_t + W_hf h_(t-1) + b_f + tanh(W_cf c_(t-1)))
+g_t = tanh(W_xg x_t + W_hg h_(t-1) + b_g)
+c_t = f_t * c_(t-1) + i_t * g_t
+o_t = sigmoid(W_xo x_t + W_ho h_(t-1) + b_o + tanh(W_co c_t))
+h_t = o_t * tanh(c_t)
+```
+
+Here `*` denotes elementwise multiplication. Computing `c_t` before `o_t` implements equation 9 of the guidelines. The memory projections have no additional bias. The implementation uses `nn.Linear` primitives, with no built-in LSTM cell.
+
+### Results — WMC, fine-grained task (10 entity types)
+
+Three complete runs on a Colab Tesla T4, under the common baseline protocol: Adam lr=0.001, batch 32, BiWMC H=128, one layer, dropout 0.3, seeds 1/2/3, at most 60 epochs and early-stopping patience 10. Each test score uses the checkpoint selected by validation F1. Values after ± are sample standard deviations across the three seeds.
+
+| Run | Test precision (%) | Test recall (%) | Test F1 (%) | Test macro F1 (%) | Epochs run | Best epoch |
+|---|---|---|---|---|---|---|
+| Seed 1 | 93.78 | 95.56 | 94.66 | 90.55 | 60 | 51 |
+| Seed 2 | 93.54 | 95.60 | 94.56 | 90.44 | 60 | 60 |
+| Seed 3 | 88.60 | 95.73 | 92.03 | 88.38 | 55 | 45 |
+| **Mean ± std** | **91.97 ± 2.92** | **95.63 ± 0.09** | **93.75 ± 1.49** | **89.79 ± 1.22** | — | — |
+
+Trainable parameters: **898,339 total**, including **340,992 recurrent**. For input dimension D and hidden size H, one direction has `4(DH + H² + H) + 3H²` parameters. With D=108 and H=128, this gives 170,496 per direction. Mean epoch times for seeds 1/2/3 were 17.12 / 18.08 / 17.67 seconds on T4.
+
+Main observations from these WMC runs:
+
+* **Variation between seeds matters.** Seeds 1 and 2 reach about 94.6% F1; seed 3 reaches 92.03%. All three runs are included in the reported mean.
+* **Seed 3 mainly loses precision.** Its recall remains 95.73%, but precision falls to 88.60%. For example, FORME precision is 70.17% against 96.76% recall in that run, indicating many false positives for this type.
+* **Stopping behavior differs.** Seeds 1 and 2 reach the 60-epoch limit; seed 3 stops at epoch 55, ten epochs after its best validation score at epoch 45. Seed 2's selected epoch is the final epoch, so these runs do not establish convergence beyond the common budget.
+* **Scope of the evidence.** These are three baseline runs. No WMC hyperparameter sweep or ablation was performed, so they do not establish which WMC setting is optimal. The comparison across all three architectures remains a group task.
+
+### Delivered files and reproduction
+
+The implementation and results are submitted in [PR #2](https://github.com/MANAL2288/lstm-ner-botanical-french/pull/2), from `wmc-lstm` to `main`. Raw configurations, learning histories and validation/test metrics are available for [seed 1](results/runs/fine_wmc_baseline_s1/), [seed 2](results/runs/fine_wmc_baseline_s2/) and [seed 3](results/runs/fine_wmc_baseline_s3/). See the [aggregate summary](results/wmc_summary.md) and the WMC rows in [results/summary.jsonl](results/summary.jsonl).
+
+Tests in [tests/test_wmc.py](tests/test_wmc.py) check the equations and gradients, use of the updated memory in the output gate, reduction to Vanilla when memory projections are zero, initialisation, masking and parameter counts. [tests/test_wmc_summary.py](tests/test_wmc_summary.py) checks that the summary requires complete runs under the common protocol.
+
+Run only WMC: `python src/sweep.py --cell wmc --study baseline`, then `python src/summarize_wmc.py`. For Colab T4, use [notebooks/FloraNER_WMC_colab.ipynb](notebooks/FloraNER_WMC_colab.ipynb); regenerate it with `python notebooks/build_wmc_colab.py`. See [WMC_HANDOFF.md](WMC_HANDOFF.md) and [WMC_VALIDATION.md](WMC_VALIDATION.md) for the duo handoff and checks. The collective architecture comparison, final report and slides remain group work.
 
 ## Reference
 
