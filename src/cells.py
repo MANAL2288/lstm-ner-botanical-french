@@ -98,9 +98,54 @@ class VanillaLSTMCell(RecurrentCell):
             self.x2h.bias[H:2 * H].fill_(forget_bias)  # remember by default at the start of training
 
 
+class WMCCell(VanillaLSTMCell):
+    r"""Working Memory Connections, guidelines equations (7)-(12).
+
+    Input and recurrent projections use the vanilla (i, f, g, o) layout.
+    Memory projections are full H x H matrices, without extra biases:
+    i/f use tanh(W_c c_prev), whereas o uses tanh(W_co c_new).
+    """
+
+    def __init__(self, input_size: int, hidden_size: int):
+        # Build explicitly: the parent constructor calls reset_parameters before
+        # the additional memory projections would have been created.
+        RecurrentCell.__init__(self)
+        self.input_size = input_size
+        self.hidden_size = self.output_size = hidden_size
+        self.x2h = nn.Linear(input_size, 4 * hidden_size)
+        self.h2h = nn.Linear(hidden_size, 4 * hidden_size, bias=False)
+        self.c2if = nn.Linear(hidden_size, 2 * hidden_size, bias=False)
+        self.c2o = nn.Linear(hidden_size, hidden_size, bias=False)
+        self.reset_parameters()
+
+    def forward(self, xp_t, state):
+        h_prev, c_prev = state
+        i, f, g, o = (xp_t + self.h2h(h_prev)).chunk(4, dim=-1)
+        ci, cf = torch.tanh(self.c2if(c_prev)).chunk(2, dim=-1)
+        i = torch.sigmoid(i + ci)
+        f = torch.sigmoid(f + cf)
+        g = torch.tanh(g)
+        c = f * c_prev + i * g
+        o = torch.sigmoid(o + torch.tanh(self.c2o(c)))
+        h = o * torch.tanh(c)
+        return h, (h, c)
+
+    @torch.no_grad()
+    def reset_parameters(self, scheme: str = "default", forget_bias: float = 0.0):
+        super().reset_parameters(scheme, forget_bias)
+        # The parent's default scheme already initializes every parameter,
+        # including memory weights, with the common uniform distribution.
+        if scheme in ("xavier", "orthogonal"):
+            init = nn.init.xavier_uniform_ if scheme == "xavier" else nn.init.orthogonal_
+            for block in self.c2if.weight.chunk(2, dim=0):
+                init(block)
+            init(self.c2o.weight)
+
+
 CELLS: dict[str, type[RecurrentCell]] = {
     "vanilla": VanillaLSTMCell,
-    # "cifg": CIFGCell, "lstmp": LSTMPCell, "wmc": WMCCell  <- teammates' variants
+    "wmc": WMCCell,
+    # "cifg": CIFGCell, "lstmp": LSTMPCell  <- other variants
 }
 
 
