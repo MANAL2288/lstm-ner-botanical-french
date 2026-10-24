@@ -1,9 +1,11 @@
-Implement WMC botanical NER cell under the common training protocol
+WMC LSTM: cell, three-seed baseline results and Colab workflow
 
-Adds the WMC cell from guidelines equations 7–12 to the shared NER pipeline. The input/forget gates use the previous memory; the output gate uses the updated memory. Memory connections are full bias-free linear maps followed by tanh.
+Implements Working Memory Connections from guidelines equations 7–12 in the shared botanical French NER pipeline. The input and forget gates use c_(t-1); the output gate uses the newly computed c_t. The three memory maps are full bias-free nn.Linear projections followed by tanh.
 
-Includes independent equation/gradient checks, a regression test for the output gate's memory dependency, vanilla reduction, padding and model integration checks, plus a self-contained WMC-only Colab notebook and three-seed summary script. Shared data, baseline settings and Vanilla results are unchanged.
+The three common-baseline runs on Tesla T4 achieved test entity F1 **93.75 ± 1.49%** (seeds 1/2/3: 94.66%, 94.56%, 92.03%). The model has **898,339 trainable parameters**, including **340,992 recurrent**. Data splits, preprocessing, Adam lr=0.001, bidirectionality, hidden size, dropout, batch size and best-validation evaluation protocol are unchanged. Seeds 1/2 ran 60 epochs; seed 3 stopped at 55 with patience 10.
 
-Training results: pending the three full GPU runs. This PR delivers implementation and execution tooling; collective architecture comparison, final report and slides remain group work.
+Includes the complete configs/histories/metrics, three WMC summary rows, a validated summary script, dedicated self-contained Colab notebook, and duo handoff notes. The 56 existing Vanilla rows and their analysis are preserved.
 
-Validation: 19 successful checks across the cell, shared model/metrics, and three-seed summarizer; notebook syntax/source consistency verified. A two-batch real-data smoke run completed on CPU and confirmed 898,339 total / 340,992 recurrent parameters. Full GPU runs were launched on Tesla T4, but final results remain pending after a Colab service connection failure.
+Validation: 19 successful local checks in total; 18 passed plus one optional seqeval check skipped on Colab (that check passed locally). Verified notebook/source consistency and cross-checked each saved run's best epoch, history, scores and parameter counts.
+
+This completes the Said & MS WMC contribution. Collective comparison with CIFG/Vanilla, final report and slides remain group work; this PR does not merge into main or submit the project.

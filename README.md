@@ -28,7 +28,7 @@ hyperparameters chosen on validation F1, reported as mean ± std over 3 seeds.
 | Path | Content |
 |---|---|
 | `src/data.py` | CSV loading, tokenisation, char spans → BIO, document-level val split, vocab, `Dataset`, `collate_fn` |
-| `src/cells.py` | `RecurrentCell` interface + `VanillaLSTMCell` (eqs. 1–6 of the guidelines) |
+| `src/cells.py` | `RecurrentCell` interface + `VanillaLSTMCell` (eqs. 1–6) and `WMCCell` (eqs. 7–12) |
 | `src/model.py` | `RecurrentLayer` (masked, optionally bidirectional unrolling) and `NERTagger` |
 | `src/metrics.py` | entity-level precision / recall / F1 (conlleval semantics) |
 | `src/train.py` | training loop (≤ 60 epochs, early stopping, best validation epoch kept), evaluation, run logging |
@@ -105,6 +105,14 @@ Main findings (Δ = test F1 difference with the baseline trained with the same s
   Macro F1 is fragile: DEVELOPPEMENT has only 4 test entities.
 
 Not run (Colab GPU quota): dropout 0.5 seed 3, and the case-feature ablation.
+
+## WMC contribution — Said & MS
+
+WMC is implemented in `src/cells.py` and registered as `wmc`. The input/forget gates use the previous memory, and the output gate uses the **updated** memory (guidelines equation 9). All transformations use `nn.Linear`; the three memory maps are full bias-free matrices followed by `tanh`.
+
+Under the common baseline protocol (Adam lr=0.001, BiWMC H=128, dropout 0.3, batch 32, seeds 1/2/3, at most 60 epochs, patience 10), test entity F1 is **93.75 ± 1.49%**. Individual seeds: **94.66%, 94.56%, 92.03%**. Trainable parameters: **898,339 total**, including **340,992 recurrent**. Full metrics and histories are in `results/runs/fine_wmc_baseline_s*/`; the summary is [results/wmc_summary.md](results/wmc_summary.md).
+
+Run only WMC: `python src/sweep.py --cell wmc --study baseline`, then `python src/summarize_wmc.py`. For Colab T4, use [notebooks/FloraNER_WMC_colab.ipynb](notebooks/FloraNER_WMC_colab.ipynb); regenerate it with `python notebooks/build_wmc_colab.py`. See [WMC_HANDOFF.md](WMC_HANDOFF.md) and [WMC_VALIDATION.md](WMC_VALIDATION.md) for the duo handoff and checks. The collective architecture comparison, final report and slides remain group work.
 
 ## Reference
 
