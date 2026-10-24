@@ -18,7 +18,13 @@ os.makedirs('/content/floraner/src', exist_ok=True)
 os.makedirs('/content/floraner/tests', exist_ok=True)
 os.chdir('/content/floraner')
 def run(*args):
-    subprocess.run([sys.executable, *args], check=True)
+    command = [sys.executable, *args]
+    print('Running:', ' '.join(command), flush=True)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+    for line in process.stdout:
+        print(line, end='', flush=True)
+    if process.wait() != 0:
+        raise subprocess.CalledProcessError(process.returncode, command)
 run('-m', 'pip', 'install', '-q', 'pytest', 'numpy')
 ''')]
 for rel in ['src/data.py','src/download_data.py','src/metrics.py','src/cells.py','src/model.py','src/train.py','src/sweep.py','tests/test_model.py','tests/test_wmc.py','src/summarize_wmc.py']:
