@@ -142,10 +142,71 @@ class WMCCell(VanillaLSTMCell):
             init(self.c2o.weight)
 
 
+class CIFGCell(RecurrentCell):
+    r"""Coupled Input-Forget Gate LSTM (Greff et al., 2017).
+
+        f_t = σ(W_hf h_{t-1} + W_xf x_t + b_f)
+        i_t = 1 - f_t                                  <- the only change w.r.t. the vanilla LSTM
+        o_t = σ(W_ho h_{t-1} + W_xo x_t + b_o)
+        g_t = tanh(W_hg h_{t-1} + W_xg x_t + b_g)
+        c_t = f_t ⊙ c_{t-1} + i_t ⊙ g_t
+        h_t = o_t ⊙ tanh(c_t)
+
+    Three gate blocks (f, o, g) are stacked in one nn.Linear of output size 3H, in this
+    order, instead of four: about 25% fewer recurrent parameters than the vanilla LSTM.
+    """
+
+    GATES = ("f", "o", "g")
+
+    def __init__(self, input_size: int, hidden_size: int):
+        super().__init__()
+        self.input_size, self.hidden_size, self.output_size = input_size, hidden_size, hidden_size
+        self.x2h = nn.Linear(input_size, 3 * hidden_size)               # W_x[f,o,g], b[f,o,g]
+        self.h2h = nn.Linear(hidden_size, 3 * hidden_size, bias=False)  # W_h[f,o,g]
+        self.reset_parameters()
+
+    def input_projection(self, x):
+        return self.x2h(x)
+
+    def init_state(self, batch_size, device):
+        zeros = torch.zeros(batch_size, self.hidden_size, device=device)
+        return zeros, zeros.clone()
+
+    def forward(self, xp_t, state):
+        h_prev, c_prev = state
+        gates = xp_t + self.h2h(h_prev)
+        f, o, g = gates.chunk(3, dim=-1)
+        f, o = torch.sigmoid(f), torch.sigmoid(o)
+        g = torch.tanh(g)
+        c = f * c_prev + (1.0 - f) * g          # i_t = 1 - f_t
+        h = o * torch.tanh(c)
+        return h, (h, c)
+
+    @torch.no_grad()
+    def reset_parameters(self, scheme: str = "default", forget_bias: float = 0.0):
+        H = self.hidden_size
+        if scheme == "default":  # same convention as the vanilla cell: U(-1/sqrt(H), 1/sqrt(H))
+            bound = 1.0 / math.sqrt(H)
+            for p in self.parameters():
+                nn.init.uniform_(p, -bound, bound)
+        elif scheme in ("xavier", "orthogonal"):
+            for k in range(3):  # one (H x D) block per gate
+                nn.init.xavier_uniform_(self.x2h.weight[k * H:(k + 1) * H])
+                if scheme == "xavier":
+                    nn.init.xavier_uniform_(self.h2h.weight[k * H:(k + 1) * H])
+                else:
+                    nn.init.orthogonal_(self.h2h.weight[k * H:(k + 1) * H])
+            nn.init.zeros_(self.x2h.bias)
+        else:
+            raise ValueError(f"unknown init scheme: {scheme}")
+        if forget_bias:
+            self.x2h.bias[0:H].fill_(forget_bias)  # f is the FIRST block here (second in the vanilla cell)
+
+
 CELLS: dict[str, type[RecurrentCell]] = {
     "vanilla": VanillaLSTMCell,
+    "cifg": CIFGCell,
     "wmc": WMCCell,
-    # "cifg": CIFGCell, "lstmp": LSTMPCell  <- other variants
 }
 
 

@@ -10,7 +10,7 @@ import torch
 from torch import nn
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from cells import VanillaLSTMCell  # noqa: E402
+from cells import CIFGCell, VanillaLSTMCell  # noqa: E402
 from data import collate_fn, spans_to_bio  # noqa: E402
 from model import NERTagger, RecurrentLayer  # noqa: E402
 
@@ -33,10 +33,11 @@ def test_vanilla_cell_matches_pytorch_lstmcell():
         assert torch.allclose(h, h_ref, atol=1e-6) and torch.allclose(state[1], c_ref, atol=1e-6)
 
 
+@pytest.mark.parametrize("cell", ["vanilla", "cifg"])
 @pytest.mark.parametrize("bidirectional", [False, True])
-def test_padding_does_not_change_outputs(bidirectional):
+def test_padding_does_not_change_outputs(cell, bidirectional):
     torch.manual_seed(0)
-    layer = RecurrentLayer("vanilla", 4, 6, bidirectional=bidirectional)
+    layer = RecurrentLayer(cell, 4, 6, bidirectional=bidirectional)
     short = torch.randn(1, 5, 4)
     alone = layer(short, torch.ones(1, 5, dtype=torch.bool))
     batch = torch.cat([torch.cat([short, torch.randn(1, 4, 4)], 1), torch.randn(1, 9, 4)])
@@ -94,3 +95,46 @@ def test_spans_to_bio():
     assert tokens == ["feuilles", "obovées", "-", "elliptiques", ",", "20", "cm", "de", "longueur"]
     assert tags == ["B-ORGANE", "B-FORME", "I-FORME", "I-FORME", "O",
                     "B-MESURE", "I-MESURE", "I-MESURE", "I-MESURE"]
+
+
+def _vanilla_equivalent_of(cifg):
+    """Vanilla cell whose input gate is forced to 1 - f: W_i = -W_f, b_i = -b_f (since σ(-a) = 1 - σ(a))."""
+    H = cifg.hidden_size
+    van = VanillaLSTMCell(cifg.input_size, H)
+    with torch.no_grad():
+        for src, dst in ((cifg.x2h.weight, van.x2h.weight), (cifg.x2h.bias, van.x2h.bias),
+                         (cifg.h2h.weight, van.h2h.weight)):
+            f, o, g = src[:H], src[H:2 * H], src[2 * H:]   # CIFG order: (f, o, g)
+            dst.copy_(torch.cat([-f, f, g, o]))            # vanilla order: (i, f, g, o)
+    return van
+
+
+def test_cifg_equals_vanilla_with_coupled_input_gate():
+    torch.manual_seed(0)
+    D, H, B, T = 7, 5, 3, 12
+    cifg = CIFGCell(D, H)
+    van = _vanilla_equivalent_of(cifg)
+    x = torch.randn(B, T, D)
+    xp_c, xp_v = cifg.input_projection(x), van.input_projection(x)
+    s_c, s_v = cifg.init_state(B, "cpu"), van.init_state(B, "cpu")
+    for t in range(T):
+        h_c, s_c = cifg(xp_c[:, t], s_c)
+        h_v, s_v = van(xp_v[:, t], s_v)
+        assert torch.allclose(h_c, h_v, atol=1e-6) and torch.allclose(s_c[1], s_v[1], atol=1e-6)
+
+
+def test_cifg_parameter_count_matches_formula():
+    D, H = 108, 128
+    cell = CIFGCell(D, H)
+    assert cell.recurrent_parameter_count() == 3 * (D * H + H * H + H)
+    assert cell.recurrent_parameter_count() < VanillaLSTMCell(D, H).recurrent_parameter_count()
+
+
+@pytest.mark.parametrize("scheme", ["default", "xavier", "orthogonal"])
+def test_cifg_forget_bias_goes_to_the_forget_gate(scheme):
+    H = 6
+    cell = CIFGCell(4, H)
+    cell.reset_parameters(scheme, forget_bias=1.0)
+    assert torch.all(cell.x2h.bias[:H] == 1.0)        # f is the FIRST block in CIFG
+    if scheme != "default":                            # other gates are zero-initialised in these schemes
+        assert torch.all(cell.x2h.bias[H:] == 0.0)
