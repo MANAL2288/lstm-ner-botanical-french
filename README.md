@@ -159,3 +159,7 @@ Run only WMC: `python src/sweep.py --cell wmc --study baseline`, then `python sr
 
 Nainia et al., *FloraNER: a Named Entity Recognition Dataset for Botanical French Text* (2024).
 The authors' spaCy models reach entity F1 = 0.963 (species), 0.945 (coarse), 0.945 (fine) on their test split.
+
+## Complete WMC experiments — Said & MS
+
+The 60 WMC runs are complete. See [WMC sweep results](WMC_SWEEP_RESULTS.md) for the protocol, provenance and files; use [summary_wmc.json](results/summary_wmc.json) for the full WMC comparison.
